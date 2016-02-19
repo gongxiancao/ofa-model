@@ -10,13 +10,14 @@
     "type": "git",
     "url": "git://github.com/gongxiancao/framework-model.git"
   },
-  "author": "",
+  "author": "gongxiancao",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/gongxiancao/framework-model/issues"
   },
   "homepage": "https://github.com/gongxiancao/framework-model",
   "dependencies": {
+    "async": "^1.5.2",
     "lodash": "^4.4.0",
     "mongoose": "^4.4.3"
   }

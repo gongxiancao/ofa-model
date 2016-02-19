@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
   _ = require('lodash'),
+  async = require('async'),
   fs = require('fs'),
   pathUtil = require('path'),
   Schema = mongoose.Schema;
@@ -20,24 +21,33 @@ module.exports = function (done) {
   var models = self.models = {};
   var modelsPath = self.config.paths.models = pathUtil.join(self.config.paths.root, 'api/models');
 
-  var fileNames = fs.readdirSync(modelsPath);
+  fs.readdir(modelsPath, function (err, fileNames) {
+    async.each(fileNames, function (fileName, done) {
+      var filePath = pathUtil.join(modelsPath, fileName);
+      var extname = pathUtil.extname(filePath);
+      if(extname !== '.js') {
+        return done();
+      }
+      fs.stat(filePath, function (err, stat) {
+        if(err) {
+          return done();
+        }
 
-  fileNames.forEach(function (fileName) {
-    var filePath = pathUtil.join(modelsPath, fileName);
-    var stat = fs.statSync(filePath);
-    var extname = pathUtil.extname(filePath);
-    if(stat && stat.isFile && extname === '.js') {
-      var moduleName = pathUtil.basename(fileName, extname);
-      models[moduleName] = require(filePath);
-    }
+        if(stat.isFile()) {
+          var moduleName = pathUtil.basename(fileName, extname);
+          models[moduleName] = require(filePath);
+        }
+        done();
+      });
+    }, function () {
+      _.each(Object.keys(models), function (modelName) {
+        models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes));
+      });
+
+      _.extend(global, models);
+
+      var connectionString = composeMongodbConnectionString(connectionConfig);
+      mongoose.connect(connectionString, done);
+    });
   });
-
-  _.each(Object.keys(models), function (modelName) {
-    models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes));
-  });
-
-  _.extend(global, models);
-
-  var connectionString = composeMongodbConnectionString(connectionConfig);
-  return mongoose.connect(connectionString, done);
 };
