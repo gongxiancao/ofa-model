@@ -18,6 +18,8 @@ module.exports = function (done) {
     throw new Error('No connection config with name ' + connectionName + ' for current env');
   }
 
+  global.ObjectId = Schema.Types.ObjectId;
+
   var models = self.models = {};
   var modelsPath = self.config.paths.models = pathUtil.join(self.config.paths.root, 'api/models');
 
