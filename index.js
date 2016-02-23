@@ -43,7 +43,7 @@ module.exports = function (done) {
       });
     }, function () {
       _.each(Object.keys(models), function (modelName) {
-        models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes));
+        models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes, {collection: modelName.toLowerCase()}));
       });
 
       _.extend(global, models);
