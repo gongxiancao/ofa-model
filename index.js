@@ -9,7 +9,7 @@ function composeMongodbConnectionString(config) {
   return 'mongodb://'+ (config.user ? (config.user + ':' + config.password + '@'): '') + config.host + ':' + (config.port || 27017) + '/' + config.database;
 }
 
-module.exports = function (done) {
+function lift (done) {
   var self = this;
   var modelsConfig = self.config.models;
   var connectionName = modelsConfig.connection;
@@ -52,4 +52,13 @@ module.exports = function (done) {
       mongoose.connect(connectionString, done);
     });
   });
+}
+
+function lower (done) {
+  mongoose.disconnect(done);
+}
+
+module.exports = {
+  lift: lift,
+  lower: lower
 };
