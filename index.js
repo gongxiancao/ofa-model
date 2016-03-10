@@ -43,7 +43,10 @@ function lift (done) {
       });
     }, function () {
       _.each(Object.keys(models), function (modelName) {
-        models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes, {collection: modelName.toLowerCase()}));
+        var model = models[modelName];
+        model.options = model.options || {};
+        model.options.collection = model.options.collection || modelName.toLowerCase();
+        models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes, options));
       });
 
       _.extend(global, models);
