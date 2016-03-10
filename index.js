@@ -46,7 +46,13 @@ function lift (done) {
         var model = models[modelName];
         model.options = model.options || {};
         model.options.collection = model.options.collection || modelName.toLowerCase();
-        models[modelName] = mongoose.model(modelName, new Schema(models[modelName].attributes, options));
+        var schema = new Schema(models[modelName].attributes, model.options);
+
+        if(model.schemaInitializer) {
+          model.schemaInitializer(schema);
+        }
+
+        models[modelName] = mongoose.model(modelName, schema);
       });
 
       _.extend(global, models);
