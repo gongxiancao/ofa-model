@@ -2,11 +2,12 @@ var mongoose = require('mongoose'),
   _ = require('lodash'),
   async = require('async'),
   fs = require('fs'),
+  mongodbUri = require('mongodb-uri'),
   pathUtil = require('path'),
   Schema = mongoose.Schema;
 
-function composeMongodbConnectionString(config) {
-  return 'mongodb://'+ (config.user ? (config.user + ':' + config.password + '@'): '') + config.host + ':' + (config.port || 27017) + '/' + config.database;
+function composeMongodbConnectionString (config) {
+  return mongodbUri.format(config);
 }
 
 function lift (done) {
