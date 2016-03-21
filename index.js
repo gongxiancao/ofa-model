@@ -20,6 +20,7 @@ function lift (done) {
   }
 
   global.ObjectId = Schema.Types.ObjectId;
+  global.Mixed = Schema.Types.Mixed;
 
   var models = self.models = {};
   var modelsPath = self.config.paths.models = pathUtil.join(self.config.paths.root, 'api/models');
