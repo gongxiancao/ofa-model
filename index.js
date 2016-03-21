@@ -14,6 +14,10 @@ function lift (done) {
   var self = this;
   var modelsConfig = self.config.models;
   var connectionName = modelsConfig.connection;
+  if(modelsConfig.Promise) {
+    mongoose.Promise = modelsConfig.Promise;
+  }
+
   var connectionConfig = self.config.connections[connectionName];
   if(!connectionConfig) {
     throw new Error('No connection config with name ' + connectionName + ' for current env');
@@ -60,7 +64,11 @@ function lift (done) {
       _.extend(global, models);
 
       var connectionString = composeMongodbConnectionString(connectionConfig);
-      mongoose.connect(connectionString, done);
+      var options = {};
+      if(modelsConfig.promise) {
+        options.promiseLibrary = modelsConfig.promise;
+      }
+      mongoose.connect(connectionString, options, done);
     });
   });
 }
