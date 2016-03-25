@@ -95,6 +95,7 @@ function lift (done) {
         return connections[connectionName].model(modelName, schema);
       });
       _.extend(global, self.models);
+      return null;
     })
     .then(_.ary(done, 0))
     .catch(done);
