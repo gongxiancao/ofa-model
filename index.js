@@ -1,9 +1,10 @@
+
 var mongoose = require('mongoose'),
   _ = require('lodash'),
-  async = require('async'),
   fs = require('fs'),
   mongodbUri = require('mongodb-uri'),
   pathUtil = require('path'),
+  Promise = require('bluebird'),
   Schema = mongoose.Schema;
 
 function composeMongodbConnectionString (config) {
@@ -13,64 +14,90 @@ function composeMongodbConnectionString (config) {
 function lift (done) {
   var self = this;
   var modelsConfig = self.config.models;
-  var connectionName = modelsConfig.connection;
+  var defaultConnectionName = modelsConfig.connection;
+
+  // custom Promise
   if(modelsConfig.Promise) {
     mongoose.Promise = modelsConfig.Promise;
   }
 
-  var connectionConfig = self.config.connections[connectionName];
-  if(!connectionConfig) {
-    throw new Error('No connection config with name ' + connectionName + ' for current env');
-  }
-
+  // expose mongoose schema types
   global.ObjectId = Schema.Types.ObjectId;
   global.Mixed = Schema.Types.Mixed;
 
-  var models = self.models = {};
   var modelsPath = self.config.paths.models = pathUtil.join(self.config.paths.root, 'api/models');
 
-  fs.readdir(modelsPath, function (err, fileNames) {
-    async.each(fileNames, function (fileName, done) {
-      var filePath = pathUtil.join(modelsPath, fileName);
-      var extname = pathUtil.extname(filePath);
-      if(extname !== '.js') {
-        return done();
-      }
-      fs.stat(filePath, function (err, stat) {
-        if(err) {
-          return done();
-        }
+  var readdirAsync = Promise.promisify(fs.readdir),
+    statAsync = Promise.promisify(fs.stat);
 
-        if(stat.isFile()) {
-          var moduleName = pathUtil.basename(fileName, extname);
-          models[moduleName] = require(filePath);
-        }
-        done();
+  readdirAsync(modelsPath)
+    .then(function (fileNames) {
+      var filePaths = _.map(fileNames, function (fileName) {
+        return pathUtil.join(modelsPath, fileName);
       });
-    }, function () {
-      _.each(Object.keys(models), function (modelName) {
-        var model = models[modelName];
-        model.options = model.options || {};
-        model.options.collection = model.options.collection || modelName.toLowerCase();
-        var schema = new Schema(models[modelName].attributes, model.options);
 
+      return [fileNames, filePaths, Promise.map(filePaths, function (filePath) {
+        var extname = pathUtil.extname(filePath);
+        if(extname !== '.js') {
+          return null;
+        }
+        return statAsync(filePath);
+      })];
+    })
+    .spread(function (fileNames, filePaths, fileStats) {
+      var connections = {};
+      var models = {};
+      // get model definitions and connection definitions
+      _.each(fileNames, function (fileName, index) {
+        var stat = fileStats[index];
+        if(!stat || !stat.isFile()) {
+          return;
+        }
+
+        var filePath = filePaths[index];
+        var model = require(filePath);
+        var modelName = pathUtil.basename(fileName, '.js');
+
+        models[modelName] = model;
+        model.options = model.options || {};
+
+        // cache connection config
+        var connectionName = model.options.connection = model.options.connection || defaultConnectionName;
+        var connectionConfig = self.config.connections[connectionName];
+        if(!connectionConfig) {
+          throw new Error('cannot find connection config for ' + connectionName);
+        }
+        connections[connectionName] = connectionConfig;
+      });
+
+      // specify native query promise type
+      var connectionOptions = {};
+      if(modelsConfig.Promise) {
+        connectionOptions.promiseLibrary = modelsConfig.Promise;
+      }
+
+      // create used connections
+      connections = _.mapValues(connections, function (connectionConfig) {
+        return mongoose.createConnection(composeMongodbConnectionString(connectionConfig), connectionOptions);
+      });
+
+      self.models = models = _.mapValues(models, function (model, modelName) {
+        model.options.collection = model.options.collection || modelName.toLowerCase();
+
+        var options = _.extend({}, model.options);
+        delete options.connection;
+
+        var schema = new Schema(model.attributes, options);
         if(model.schemaInitializer) {
           model.schemaInitializer(schema);
         }
-
-        models[modelName] = mongoose.model(modelName, schema);
+        var connectionName = model.options.connection || defaultConnectionName;
+        return connections[connectionName].model(modelName, schema);
       });
-
-      _.extend(global, models);
-
-      var connectionString = composeMongodbConnectionString(connectionConfig);
-      var options = {};
-      if(modelsConfig.promise) {
-        options.promiseLibrary = modelsConfig.promise;
-      }
-      mongoose.connect(connectionString, options, done);
-    });
-  });
+      _.extend(global, self.models);
+    })
+    .then(_.ary(done, 0))
+    .catch(done);
 }
 
 function lower (done) {

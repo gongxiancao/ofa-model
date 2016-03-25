@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/gongxiancao/framework-model",
   "dependencies": {
-    "async": "1.5.2",
+    "bluebird": "3.3.4",
     "lodash": "4.5.0",
     "mongodb-uri": "0.9.7",
     "mongoose": "4.4.3"
