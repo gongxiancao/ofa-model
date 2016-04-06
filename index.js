@@ -71,7 +71,11 @@ function lift (done) {
       });
 
       // specify native query promise type
-      var connectionOptions = {};
+      var connectionOptions = {
+        config: {
+          autoIndex: (typeof modelsConfig.autoIndex) === 'undefined' ? true: !!modelsConfig.autoIndex
+        }
+      };
       if(modelsConfig.Promise) {
         connectionOptions.promiseLibrary = modelsConfig.Promise;
       }
