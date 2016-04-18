@@ -24,6 +24,7 @@ function lift (done) {
   // expose mongoose schema types
   global.ObjectId = Schema.Types.ObjectId;
   global.Mixed = Schema.Types.Mixed;
+  global.ObjectID = mongoose.mongo.ObjectID;
 
   var modelsPath = self.config.paths.models = pathUtil.join(self.config.paths.root, 'api/models');
 
