@@ -1,21 +1,21 @@
 {
-  "name": "framework-model",
-  "version": "0.0.0",
-  "description": "",
+  "name": "ofa-model",
+  "version": "1.0.0",
+  "description": "ofa model",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/gongxiancao/framework-model.git"
+    "url": "git://github.com/gongxiancao/ofa-model.git"
   },
   "author": "gongxiancao",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gongxiancao/framework-model/issues"
+    "url": "https://github.com/gongxiancao/ofa-model/issues"
   },
-  "homepage": "https://github.com/gongxiancao/framework-model",
+  "homepage": "https://github.com/gongxiancao/ofa-model",
   "dependencies": {
     "bluebird": "3.3.5",
     "lodash": "4.5.0",
