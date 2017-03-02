@@ -80,6 +80,9 @@ function lift (done) {
       if(modelsConfig.Promise) {
         connectionOptions.promiseLibrary = modelsConfig.Promise;
       }
+      if(modelsConfig.mongos) {
+        connectionOptions.mongos = true;
+      }
 
       // create used connections
       connections = _.mapValues(connections, function (connectionConfig) {
