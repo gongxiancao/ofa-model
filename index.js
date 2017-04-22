@@ -86,7 +86,8 @@ function lift (done) {
 
       // create used connections
       connections = _.mapValues(connections, function (connectionConfig) {
-        return mongoose.createConnection(composeMongodbConnectionString(connectionConfig), connectionOptions);
+        var options = _.clone(connectionOptions);
+        return mongoose.createConnection(composeMongodbConnectionString(connectionConfig), options);
       });
 
       self.models = models = _.mapValues(models, function (model, modelName) {

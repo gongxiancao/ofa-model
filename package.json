@@ -1,6 +1,6 @@
 {
   "name": "ofa-model",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "ofa model",
   "main": "index.js",
   "scripts": {
